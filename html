@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mixer DJ Completo</title>
+  <style>
+    body {
+      margin: 0;
+      background: radial-gradient(circle at center, #111 0%, #000 100%);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #0ff;
+      text-shadow: 0 0 10px #0ff;
+      margin-bottom: 30px;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    .deck {
+      background: rgba(30, 30, 30, 0.8);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 20px #0ff3;
+      backdrop-filter: blur(6px);
+    }
+    h2 {
+      color: #0f0;
+      margin-bottom: 10px;
+    }
+    input[type="range"], select {
+      width: 100%;
+      margin: 5px 0;
+    }
+    button {
+      background: linear-gradient(45deg, #0f0, #0ff);
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      color: #000;
+      font-weight: bold;
+      margin: 5px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    button:hover { transform: scale(1.05); }
+    .waveform, canvas {
+      margin-top: 10px;
+      border-radius: 6px;
+      background: #222;
+    }
+    .waveform { height: 80px; }
+    canvas { width: 100%; height: 100px; }
+    .time { font-size: 14px; color: #aaa; margin-top: 5px; }
+    .crossfader { margin-top: 40px; }
+    #downloadLink {
+      display: none;
+      margin-top: 10px;
+      color: #0ff;
+      text-decoration: underline;
+    }
+  </style>
+  <script src="https://unpkg.com/wavesurfer.js"></script>
+</head>
+<body>
+  <h1>🎧 Mixer DJ Completo com FX, Espectro e Gravação</h1>
+
+  <div class="container">
+    <div class="deck" id="deckA">
+      <h2>Deck A</h2>
+      <input type="file" accept="audio/*" onchange="loadTrack(this, 'A')">
+      <button onclick="play('A')">▶️ Play</button>
+      <button onclick="pause('A')">⏸️ Pause</button>
+      <button onclick="setCue('A')">🎯 Set Cue</button>
+      <button onclick="goToCue('A')">⏪ Go to Cue</button>
+      <button onclick="startLoop('A')">🔁 Loop</button>
+      <button onclick="stopLoop('A')">⏹️ Stop Loop</button>
+      <label>Volume</label>
+      <input type="range" min="0" max="1" step="0.01" value="1" onchange="setVolume(this.value, 'A')">
+      <label>Pitch</label>
+      <input type="range" min="0.5" max="2" step="0.01" value="1" onchange="setPitch(this.value, 'A')">
+      <label>Graves</label>
+      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('A','low',this.value)">
+      <label>Médios</label>
+      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('A','mid',this.value)">
+      <label>Agudos</label>
+      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('A','high',this.value)">
+      <div id="waveA" class="waveform"></div>
+      <canvas id="spectrumA"></canvas>
+      <div id="timeA" class="time">00:00</div>
+    </div>
+
+    <div class="deck" id="deckB">
+      <h2>Deck B</h2>
+      <input type="file" accept="audio/*" onchange="loadTrack(this, 'B')">
+      <button onclick="play('B')">▶️ Play</button>
+      <button onclick="pause('B')">⏸️ Pause</button>
+      <button onclick="setCue('B')">🎯 Set Cue</button>
+      <button onclick="goToCue('B')">⏪ Go to Cue</button>
+      <button onclick="startLoop('B')">🔁 Loop</button>
+      <button onclick="stopLoop('B')">⏹️ Stop Loop</button>
+      <label>Volume</label>
+      <input type="range" min="0" max="1" step="0.01" value="1" onchange="setVolume(this.value, 'B')">
+      <label>Pitch</label>
+      <input type="range" min="0.5" max="2" step="0.01" value="1" onchange="setPitch(this.value, 'B')">
+      <label>Graves</label>
+      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('B','low',this.value)">
+      <label>Médios</label>
+      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('B','mid',this.value)">
+      <label>Agudos</label>
+      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('B','high',this.value)">
+      <div id="waveB" class="waveform"></div>
+      <canvas id="spectrumB"></canvas>
+      <div id="timeB" class="time">00:00</div>
+    </div>
+  </div>
+
+  <div class="deck crossfader">
+    <h2>🎚️ Crossfader</h2>
+    <input type="range" id="xfader" min="0" max="1" step="0.01" value="0.5" onchange="crossfade(this.value)">
+    <label>Curva:</label>
+    <select id="curve" onchange="crossfade(document.getElementById('xfader').value)">
+      <option value="linear">Linear</option>
+      <option value="exponential">Exponencial</option>
+      <option value="log">Logarítmica</option>
+      <option value="s">Curva em S</option>
+    </select>
+  </div>
+
+  <div class="deck">
+    <h2>🎧 Painel de Efeitos</h2>
+    <label>Deck:</label>
+    <select id="fxDeck">
+      <option value="A">Deck A</option>
+      <option value="B">Deck B</option>
+    </select>
+    <button onclick="sweepFilter(getFXDeck())">🌊 Sweep</button>
+    <button onclick="addReverb(getFXDeck())">🌫️ Reverb</button>
+    <button onclick="addDelay(getFXDeck())">⏱️ Delay</button>
+  </div>
+
+  <div class="deck">
+    <h2>🎙️ Gravação da Mixagem</h2>
+    <button onclick="startRecording()">🔴 Gravar</button>
+    <button onclick="stopRecording()">⏹️ Parar</button>
+    <a id="downloadLink"></a>
+  </div>
+
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const wavesurferA = WaveSurfer.create({ container: '#waveA', waveColor: '#0f0', progressColor: '#0ff', height: 80 });
+    const wavesurferB = WaveSurfer.create({ container: '#waveB', waveColor: '#f00', progressColor: '#ff0', height: 80 });
+
+    const deckNodes = { A: {}, B: {} };
+    const eqNodes = { A: {}, B: {} };
+
+    function initDeck(deck, wavesurfer) {
+      deckNodes[deck].gain = audioCtx.createGain();
+      deckNodes[deck].analyser = audioCtx.createAnalyser();
+      deckNodes[deck].analyser.fftSize = 256;
+
+      eqNodes[deck].low = audioCtx.createBiquadFilter();
+      eqNodes[deck].low.type = "lowshelf";
+      eqNodes[deck].low.frequency.value = 200;
+
+      eqNodes[deck].mid = audioCtx.createBiquadFilter();
+      eqNodes[deck].mid.type = "peaking";
+      eqNodes[deck].mid.frequency.value = 1000;
+
+      eqNodes[deck].high = audioCtx.createBiquadFilter();
+      eqNodes[deck].high.type = "highshelf";
+      eqNodes[deck].high.frequency.value = 5000;
+
+      wavesurfer.on('ready', () => {
+        const src = audioCtx.createMediaElementSource(wavesurfer.media);
+        src.connect(eqNodes[deck].low);
+        eqNodes[deck].low.connect(eqNodes[deck].mid);
+        eqNodes[deck].mid.connect(eqNodes[deck].high);
+        eqNodes[deck].high.connect(deckNodes[deck].gain);
+        deckNodes[deck].gain.connect(deckNodes[deck].analyser);
+        deckNodes[deck].analyser.connect(audioCtx.destination);
+      });
+
+      drawSpectrum(deckNodes[deck].analyser, "spectrum" + deck);
+    }
+
+    initDeck("A", wavesurferA);
+    initDeck("B", wavesurferB);
+
+    function loadTrack(input, deck) {
+      const file = input.files[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        if (deck === "A") wavesurferA.load(url);
+        else wavesurferB.load(url);
+      }
+    }
+    function play(deck) { (deck==="A"?wavesurferA:wavesurferB).play(); }
+    function pause(deck) { (deck==="A"?wavesurferA:wavesurferB).pause(); }
+    let cuePoints = {A:0,B:0};
+    function setCue(deck){ cuePoints[deck] = (deck==="A"?wavesurferA:wavesurferB).getCurrentTime(); }
+    function goToCue(deck){ (deck==="A"?wavesurferA:wavesurferB).setTime(cuePoints[deck]); }
+    function startLoop(deck){ let ws=(deck==="A"?wavesurferA:wavesurferB); ws.setLoopStart(ws.getCurrentTime()); ws.setLoopEnd(ws.getCurrentTime()+4); ws.playLoop(); }
+    function stopLoop(deck){ (deck==="A"?wavesurferA:wavesurferB).playPause(); }
+
+    function setVolume(value, deck){ deckNodes[deck].gain.gain.value=value; }
+    function setPitch(value, deck){ (deck==="A"?wavesurferA:wavesurferB).setPlaybackRate(value); }
+    function setEQ(deck, band, value){ eqNodes[deck][band].gain.value = value; }
+
+    function crossfade(value){
+      const curve = document.getElementById("curve").value;
+      let gA,gB;
+      if(curve==="linear"){ gA=1-value; gB=value; }
+      else if(curve==="exponential"){ gA=Math.pow(1-value,2); gB=Math.pow(value,2); }
+      else if(curve==="log"){ gA=Math.log10((1-value)*9+1); gB=Math.log10(value*9+1); }
+      else{ gA=1/(1+Math.exp((value-0.5)*10)); gB=1-gA; }
+      deckNodes.A.gain.gain.setTargetAtTime(gA,audioCtx.currentTime,0.01);
+      deckNodes.B.gain.gain.setTargetAtTime(gB,audioCtx.currentTime,0.01);
+    }
+
+    function drawSpectrum(analyser, canvasId){
+      const canvas=document.getElementById(canvasId);
+      const ctx=canvas.getContext("2d");
+      const bufferLength=analyser.frequencyBinCount;
+      const dataArray=new Uint8Array(bufferLength);
+      function render(){
+        requestAnimationFrame(render);
+        analyser.getByteFrequencyData(dataArray);
+        ctx.fillStyle="#111"; ctx.fillRect(0,0,canvas.width,canvas.height);
+        const barWidth=canvas.width/bufferLength;
+        dataArray.forEach((v,i)=>{ let h=(v/255)*canvas.height; ctx.fillStyle="#0ff"; ctx.fillRect(i*barWidth,canvas.height-h,barWidth,h); });
+      }
+      render();
+    }
+
+    function getFXDeck(){ return document.getElementById("fxDeck").value; }
+    function sweepFilter(deck){ eqNodes[deck].mid.frequency.linearRampToValueAtTime(5000,audioCtx.currentTime+2); }
+    function addReverb(deck){ let convolver=audioCtx.createConvolver(); deckNodes[deck].gain.connect(convolver); convolver.connect(audioCtx.destination); }
+    function addDelay(deck){ let delay=audioCtx.createDelay(5.0); delay.delayTime.value=0.5; deckNodes[deck].gain.connect(delay); delay.connect(audioCtx.destination); }
+
+    let mediaRecorder,chunks=[];
+    function startRecording(){
+      const dest=audioCtx.createMediaStreamDestination();
+      deckNodes.A.gain.connect(dest);
+      deckNodes.B.gain.connect(dest);
+      mediaRecorder=new MediaRecorder(dest.stream);
+      mediaRecorder.ondataavailable=e=>chunks.push(e.data);
+      mediaRecorder.onstop=()=>{
+        const blob=new Blob(chunks,{type:'audio/webm'});
+        const url=URL.createObjectURL(blob);
+        const link=document.getElementById("downloadLink");
+        link.href=url; link.download="mixagem.webm"; link.style.display="block"; link.textContent="⬇️ Baixar Mixagem";
+      };
+      mediaRecorder.start();
+    }
+    function stopRecording(){ mediaRecorder.stop(); }
+  </script>
+</body>
+</html>
