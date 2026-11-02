@@ -1,267 +1,755 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mixer DJ Completo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sonic Fusion - DJ Mixer Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/wavesurfer.js@7"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
-      margin: 0;
-      background: radial-gradient(circle at center, #111 0%, #000 100%);
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-      text-align: center;
-      padding: 20px;
+      font-family: 'Inter', sans-serif;
+      background-color: #05050a;
+      color: #f3f4f6;
+      overflow-x: hidden;
     }
-    h1 {
-      color: #0ff;
-      text-shadow: 0 0 10px #0ff;
-      margin-bottom: 30px;
+    .font-orbitron {
+      font-family: 'Orbitron', sans-serif;
     }
-    .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
-      max-width: 1000px;
-      margin: auto;
+    /* Estilos neon e glassmorphism personalizados */
+    .neon-glow-cyan {
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(6, 182, 212, 0.2);
     }
-    .deck {
-      background: rgba(30, 30, 30, 0.8);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 0 20px #0ff3;
-      backdrop-filter: blur(6px);
+    .neon-glow-pink {
+      box-shadow: 0 0 20px rgba(236, 72, 153, 0.4), inset 0 0 10px rgba(236, 72, 153, 0.2);
     }
-    h2 {
-      color: #0f0;
-      margin-bottom: 10px;
+    .neon-glow-emerald {
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.2);
     }
-    input[type="range"], select {
+    .neon-text-cyan {
+      text-shadow: 0 0 10px rgba(6, 182, 212, 0.8), 0 0 20px rgba(6, 182, 212, 0.4);
+    }
+    .neon-text-pink {
+      text-shadow: 0 0 10px rgba(236, 72, 153, 0.8), 0 0 20px rgba(236, 72, 153, 0.4);
+    }
+    .glass-panel {
+      background: rgba(15, 15, 25, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    /* Customização de ranges */
+    input[type=range] {
+      accent-color: #06b6d4;
+    }
+    /* Animações de transição de telas */
+    .screen {
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .screen-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.98);
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
-      margin: 5px 0;
-    }
-    button {
-      background: linear-gradient(45deg, #0f0, #0ff);
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      color: #000;
-      font-weight: bold;
-      margin: 5px;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
-    button:hover { transform: scale(1.05); }
-    .waveform, canvas {
-      margin-top: 10px;
-      border-radius: 6px;
-      background: #222;
-    }
-    .waveform { height: 80px; }
-    canvas { width: 100%; height: 100px; }
-    .time { font-size: 14px; color: #aaa; margin-top: 5px; }
-    .crossfader { margin-top: 40px; }
-    #downloadLink {
-      display: none;
-      margin-top: 10px;
-      color: #0ff;
-      text-decoration: underline;
+      height: 100%;
+      z-index: -10;
     }
   </style>
-  <script src="https://unpkg.com/wavesurfer.js"></script>
 </head>
-<body>
-  <h1>🎧 Mixer DJ Completo com FX, Espectro e Gravação</h1>
+<body class="min-h-screen flex flex-col relative selection:bg-cyan-500 selection:text-black">
 
-  <div class="container">
-    <div class="deck" id="deckA">
-      <h2>Deck A</h2>
-      <input type="file" accept="audio/*" onchange="loadTrack(this, 'A')">
-      <button onclick="play('A')">▶️ Play</button>
-      <button onclick="pause('A')">⏸️ Pause</button>
-      <button onclick="setCue('A')">🎯 Set Cue</button>
-      <button onclick="goToCue('A')">⏪ Go to Cue</button>
-      <button onclick="startLoop('A')">🔁 Loop</button>
-      <button onclick="stopLoop('A')">⏹️ Stop Loop</button>
-      <label>Volume</label>
-      <input type="range" min="0" max="1" step="0.01" value="1" onchange="setVolume(this.value, 'A')">
-      <label>Pitch</label>
-      <input type="range" min="0.5" max="2" step="0.01" value="1" onchange="setPitch(this.value, 'A')">
-      <label>Graves</label>
-      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('A','low',this.value)">
-      <label>Médios</label>
-      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('A','mid',this.value)">
-      <label>Agudos</label>
-      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('A','high',this.value)">
-      <div id="waveA" class="waveform"></div>
-      <canvas id="spectrumA"></canvas>
-      <div id="timeA" class="time">00:00</div>
+  <!-- ================= TELA 1: CAPA INTERATIVA / INICIAL ================= -->
+  <div id="coverScreen" class="screen fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-neutral-950 to-black">
+    
+    <!-- Fundo estilizado com atmosfera de estúdio -->
+    <div class="absolute inset-0 opacity-25 bg-cover bg-center pointer-events-none" style="background-image: url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1920&auto=format&fit=crop');"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
+
+    <div class="relative z-10 max-w-4xl w-full mx-auto text-center flex flex-col items-center space-y-8 p-8 rounded-3xl glass-panel shadow-2xl border border-cyan-500/30">
+      
+      <!-- Cabeçalho da Capa -->
+      <div class="space-y-3">
+        <h1 class="font-orbitron font-black text-5xl md:text-7xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-500 to-purple-500 neon-text-cyan">
+          SONIC FUSION
+        </h1>
+        <p class="font-orbitron tracking-widest text-sm md:text-base text-cyan-300 uppercase opacity-90">
+          The Art of Mixing • Live Professional Studio
+        </p>
+      </div>
+
+      <!-- Descrição / Mini Player Visual -->
+      <div class="w-full max-w-md bg-black/60 p-4 rounded-2xl border border-white/10 flex items-center justify-between text-xs text-gray-400">
+        <div class="flex items-center space-x-3">
+          <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+          <span>Audio Engine: <strong class="text-white">WebAudio API 2.0 Ativa</strong></span>
+        </div>
+        <span class="text-cyan-400 font-mono">DSP Ultra-Low Latency</span>
+      </div>
+
+      <!-- BOTÕES CLICÁVEIS DA CAPA -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full max-w-2xl pt-4">
+        
+        <!-- Botão Pré-escuta -->
+        <button onclick="handleCoverAction('preview')" class="group relative flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-b from-emerald-950/80 to-slate-900/90 border border-emerald-500/40 hover:border-emerald-400 transition-all duration-300 hover:scale-105 neon-glow-emerald">
+          <div class="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center mb-3 group-hover:bg-emerald-500/40 transition-colors">
+            <i class="fa-solid fa-headphones text-emerald-400 text-2xl"></i>
+          </div>
+          <span class="font-orbitron font-bold text-sm text-emerald-300 tracking-wider">PRÉ-ESCUTA</span>
+          <span class="text-xs text-emerald-500/80 mt-1">Testar Fones & Cue</span>
+        </button>
+
+        <!-- Botão Iniciar Mixagem (Principal) -->
+        <button onclick="handleCoverAction('mix')" class="group relative flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-b from-cyan-950/90 to-slate-900/95 border-2 border-cyan-400 hover:border-cyan-300 transition-all duration-300 hover:scale-105 neon-glow-cyan shadow-lg shadow-cyan-500/20">
+          <div class="w-16 h-16 rounded-full bg-cyan-500/30 flex items-center justify-center mb-3 group-hover:bg-cyan-500/50 transition-colors animate-pulse">
+            <i class="fa-solid fa-play text-cyan-300 text-3xl ml-1"></i>
+          </div>
+          <span class="font-orbitron font-black text-base text-cyan-200 tracking-widest">INICIAR MIXAGEM</span>
+          <span class="text-xs text-cyan-400 mt-1">Abrir Decks & FX Pro</span>
+        </button>
+
+        <!-- Botão Gravar -->
+        <button onclick="handleCoverAction('record')" class="group relative flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-b from-pink-950/80 to-slate-900/90 border border-pink-500/40 hover:border-pink-400 transition-all duration-300 hover:scale-105 neon-glow-pink">
+          <div class="w-14 h-14 rounded-full bg-pink-500/20 flex items-center justify-center mb-3 group-hover:bg-pink-500/40 transition-colors">
+            <i class="fa-solid fa-microphone-lines text-pink-400 text-2xl"></i>
+          </div>
+          <span class="font-orbitron font-bold text-sm text-pink-300 tracking-wider">GRAVAR SESSÃO</span>
+          <span class="text-xs text-pink-500/80 mt-1">Modo Estúdio Direto</span>
+        </button>
+
+      </div>
+
+      <div class="text-xs text-gray-500 pt-2">
+        Clique em <strong class="text-gray-300">Iniciar Mixagem</strong> para acessar os consoles de som profissionais.
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= TELA 2: APLICATIVO PRINCIPAL / DJ MIXER ================= -->
+  <div id="appScreen" class="screen screen-hidden flex flex-col min-h-screen p-4 md:p-6 max-w-7xl mx-auto w-full">
+    
+    <!-- Top Bar -->
+    <header class="flex flex-col md:flex-row items-center justify-between pb-6 mb-6 border-b border-white/10 gap-4">
+      <div class="flex items-center space-x-3">
+        <button onclick="backToCover()" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-400 border border-white/10 transition-colors flex items-center space-x-2 text-sm font-orbitron">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Voltar à Capa</span>
+        </button>
+        <div>
+          <h1 class="font-orbitron font-black text-2xl md:text-3xl tracking-wider text-cyan-400 neon-text-cyan">SONIC FUSION <span class="text-xs font-normal text-pink-400 border border-pink-500/30 px-2 py-0.5 rounded ml-2">PRO DJ</span></h1>
+          <p class="text-xs text-gray-400">Master Audio Mixing Console</p>
+        </div>
+      </div>
+
+      <!-- Status Global & Gravação Rápida -->
+      <div class="flex items-center space-x-4 bg-black/40 px-5 py-2.5 rounded-2xl border border-white/10">
+        <div class="flex items-center space-x-2">
+          <div id="masterIndicator" class="w-3 h-3 rounded-full bg-red-500/50"></div>
+          <span id="masterStatusText" class="text-xs font-mono font-semibold text-gray-300">MASTER PRONTO</span>
+        </div>
+        <div class="h-4 w-px bg-white/20"></div>
+        <button onclick="toggleGlobalRecording()" id="recMasterBtn" class="px-3 py-1.5 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500 text-pink-300 text-xs font-orbitron flex items-center space-x-2 transition-all">
+          <i class="fa-solid fa-circle text-xs text-pink-500 animate-pulse" id="recIcon"></i>
+          <span id="recText">REC MASTER</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace: Decks A & B -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      
+      <!-- ================= DECK A ================= -->
+      <div class="glass-panel p-5 rounded-3xl flex flex-col space-y-4 shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-2 h-full bg-cyan-500"></div>
+        
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></span>
+            <h2 class="font-orbitron font-bold text-lg text-cyan-300">DECK A</h2>
+          </div>
+          <span id="trackNameA" class="text-xs font-mono text-gray-400 truncate max-w-[200px]">Nenhuma música carregada</span>
+        </div>
+
+        <!-- Upload de Faixa -->
+        <div class="relative flex items-center justify-between bg-black/40 p-2 rounded-xl border border-white/10">
+          <input type="file" accept="audio/*" onchange="loadTrack(this, 'A')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+          <div class="flex items-center space-x-2 text-xs text-gray-300 pl-2">
+            <i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i>
+            <span>Carregar MP3/WAV no Deck A</span>
+          </div>
+          <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded font-mono">UPLOAD</span>
+        </div>
+
+        <!-- WaveSurfer Waveform -->
+        <div id="waveA" class="waveform rounded-xl bg-black/60 border border-white/5 h-20 relative"></div>
+        <canvas id="spectrumA" class="w-full h-16 rounded-xl bg-black/80 border border-white/5"></canvas>
+
+        <div class="flex items-center justify-between text-xs font-mono text-gray-400 px-1">
+          <span id="timeA">00:00 / 00:00</span>
+          <span id="stateA" class="text-cyan-400">STOP</span>
+        </div>
+
+        <!-- Controles de Reprodução / Cue / Loop -->
+        <div class="grid grid-cols-6 gap-2">
+          <button onclick="play('A')" class="col-span-2 py-2.5 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black font-orbitron font-bold rounded-xl text-xs flex items-center justify-center space-x-1 shadow-md transition-all">
+            <i class="fa-solid fa-play"></i><span>PLAY</span>
+          </button>
+          <button onclick="pause('A')" class="py-2.5 bg-white/10 hover:bg-white/20 text-white font-orbitron font-bold rounded-xl text-xs flex items-center justify-center transition-all">
+            <i class="fa-solid fa-pause"></i>
+          </button>
+          <button onclick="setCue('A')" class="py-2.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30 font-orbitron font-bold rounded-xl text-xs flex items-center justify-center transition-all" title="Definir Cue">
+            <i class="fa-solid fa-bullseye"></i>
+          </button>
+          <button onclick="goToCue('A')" class="py-2.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30 font-orbitron font-bold rounded-xl text-xs flex items-center justify-center transition-all" title="Ir para Cue">
+            <i class="fa-solid fa-backward-step"></i>
+          </button>
+          <button onclick="toggleLoop('A')" id="loopBtnA" class="py-2.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 font-orbitron font-bold rounded-xl text-xs flex items-center justify-center transition-all">
+            <i class="fa-solid fa-repeat"></i>
+          </button>
+        </div>
+
+        <!-- Volume, Pitch e Equalizador (3 Bandas) -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 pt-2 bg-black/30 p-3 rounded-2xl border border-white/5">
+          <div>
+            <label class="text-[10px] font-orbitron text-gray-400 block mb-1">VOLUME</label>
+            <input type="range" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value, 'A')" class="w-full">
+          </div>
+          <div>
+            <label class="text-[10px] font-orbitron text-gray-400 block mb-1">PITCH</label>
+            <input type="range" min="0.5" max="2" step="0.01" value="1" oninput="setPitch(this.value, 'A')" class="w-full">
+          </div>
+          <div>
+            <label class="text-[10px] font-orbitron text-cyan-400 block mb-1">GRAVES</label>
+            <input type="range" min="-30" max="30" value="0" step="1" oninput="setEQ('A','low',this.value)" class="w-full">
+          </div>
+          <div>
+            <label class="text-[10px] font-orbitron text-cyan-400 block mb-1">MÉDIOS</label>
+            <input type="range" min="-30" max="30" value="0" step="1" oninput="setEQ('A','mid',this.value)" class="w-full">
+          </div>
+          <div>
+            <label class="text-[10px] font-orbitron text-cyan-400 block mb-1">AGUDOS</label>
+            <input type="range" min="-30" max="30" value="0" step="1" oninput="setEQ('A','high',this.value)" class="w-full">
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ================= DECK B ================= -->
+      <div class="glass-panel p-5 rounded-3xl flex flex-col space-y-4 shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-2 h-full bg-pink-500"></div>
+        
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-pink-400 animate-ping"></span>
+            <h2 class="font-orbitron font-bold text-lg text-pink-300">DECK B</h2>
+          </div>
+          <span id="trackNameB" class="text-xs font-mono text-gray-400 truncate max-w-[200px]">Nenhuma música carregada</span>
+        </div>
+
+        <!-- Upload de Faixa -->
+        <div class="relative flex items-center justify-between bg-black/40 p-2 rounded-xl border border-white/10">
+          <input type="file" accept="audio/*" onchange="loadTrack(this, 'B')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+          <div class="flex items-center space-x-2 text-xs text-gray-300 pl-2">
+            <i class="fa-solid fa-cloud-arrow-up text-pink-400"></i>
+            <span>Carregar MP3/WAV no Deck B</span>
+          </div>
+          <span class="text-[10px] bg-pink-500/20 text-pink-300 px-2 py-1 rounded font-mono">UPLOAD</span>
+        </div>
+
+        <!-- WaveSurfer Waveform -->
+        <div id="waveB" class="waveform rounded-xl bg-black/60 border border-white/5 h-20 relative"></div>
+        <canvas id="spectrumB" class="w-full h-16 rounded-xl bg-black/80 border border-white/5"></canvas>
+
+        <div class="flex items-center justify-between text-xs font-mono text-gray-400 px-1">
+          <span id="timeB">00:00 / 00:00</span>
+          <span id="stateB" class="text-pink-400">STOP</span>
+        </div>
+
+        <!-- Controles de Reprodução / Cue / Loop -->
+        <div class="grid grid-cols-6 gap-2">
+          <button onclick="play('B')" class="col-span-2 py-2.5 bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-400 text-black font-orbitron font-bold rounded-xl text-xs flex items-center justify-center space-x-1 shadow-md transition-all">
+            <i class="fa-solid fa-play"></i><span>PLAY</span>
+          </button>
+          <button onclick="pause('B')" class="py-2.5 bg-white/10 hover:bg-white/20 text-white font-orbitron font-bold rounded-xl text-xs flex items-center justify-center transition-all">
+            <i class="fa-solid fa-pause"></i>
+          </button>
+          <button onclick="setCue('B')" class="py-2.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30 font-orbitron font-bold rounded-xl text-xs flex items-center justify-center transition-all" title="Definir Cue">
+            <i class="fa-solid fa-bullseye"></i>
+          </button>
+          <button onclick="goToCue('B')" class="py-2.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30 font-orbitron font-bold rounded-xl text-xs flex items-center justify-center transition-all" title="Ir para Cue">
+            <i class="fa-solid fa-backward-step"></i>
+          </button>
+          <button onclick="toggleLoop('B')" id="loopBtnB" class="py-2.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 font-orbitron font-bold rounded-xl text-xs flex items-center justify-center transition-all">
+            <i class="fa-solid fa-repeat"></i>
+          </button>
+        </div>
+
+        <!-- Volume, Pitch e Equalizador (3 Bandas) -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 pt-2 bg-black/30 p-3 rounded-2xl border border-white/5">
+          <div>
+            <label class="text-[10px] font-orbitron text-gray-400 block mb-1">VOLUME</label>
+            <input type="range" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value, 'B')" class="w-full">
+          </div>
+          <div>
+            <label class="text-[10px] font-orbitron text-gray-400 block mb-1">PITCH</label>
+            <input type="range" min="0.5" max="2" step="0.01" value="1" oninput="setPitch(this.value, 'B')" class="w-full">
+          </div>
+          <div>
+            <label class="text-[10px] font-orbitron text-pink-400 block mb-1">GRAVES</label>
+            <input type="range" min="-30" max="30" value="0" step="1" oninput="setEQ('B','low',this.value)" class="w-full">
+          </div>
+          <div>
+            <label class="text-[10px] font-orbitron text-pink-400 block mb-1">MÉDIOS</label>
+            <input type="range" min="-30" max="30" value="0" step="1" oninput="setEQ('B','mid',this.value)" class="w-full">
+          </div>
+          <div>
+            <label class="text-[10px] font-orbitron text-pink-400 block mb-1">AGUDOS</label>
+            <input type="range" min="-30" max="30" value="0" step="1" oninput="setEQ('B','high',this.value)" class="w-full">
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <div class="deck" id="deckB">
-      <h2>Deck B</h2>
-      <input type="file" accept="audio/*" onchange="loadTrack(this, 'B')">
-      <button onclick="play('B')">▶️ Play</button>
-      <button onclick="pause('B')">⏸️ Pause</button>
-      <button onclick="setCue('B')">🎯 Set Cue</button>
-      <button onclick="goToCue('B')">⏪ Go to Cue</button>
-      <button onclick="startLoop('B')">🔁 Loop</button>
-      <button onclick="stopLoop('B')">⏹️ Stop Loop</button>
-      <label>Volume</label>
-      <input type="range" min="0" max="1" step="0.01" value="1" onchange="setVolume(this.value, 'B')">
-      <label>Pitch</label>
-      <input type="range" min="0.5" max="2" step="0.01" value="1" onchange="setPitch(this.value, 'B')">
-      <label>Graves</label>
-      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('B','low',this.value)">
-      <label>Médios</label>
-      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('B','mid',this.value)">
-      <label>Agudos</label>
-      <input type="range" min="-30" max="30" value="0" step="1" onchange="setEQ('B','high',this.value)">
-      <div id="waveB" class="waveform"></div>
-      <canvas id="spectrumB"></canvas>
-      <div id="timeB" class="time">00:00</div>
+
+    <!-- ================= PAINEL CENTRAL DE MIXAGEM & FX ================= -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      
+      <!-- Crossfader & Curvas -->
+      <div class="glass-panel p-5 rounded-3xl flex flex-col justify-between shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-orbitron font-bold text-sm text-cyan-400 flex items-center space-x-2">
+            <i class="fa-solid fa-sliders"></i>
+            <span>CROSSFADER PRO</span>
+          </h3>
+          <select id="curve" class="bg-black/60 border border-white/10 text-xs text-gray-300 rounded-lg px-2 py-1 focus:outline-none focus:border-cyan-400">
+            <option value="linear">Linear</option>
+            <option value="exponential">Exponencial</option>
+            <option value="log">Logarítmica</option>
+            <option value="s">Curva em S</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-gray-400 mb-1">
+          <span>DECK A</span>
+          <span>CENTRO</span>
+          <span>DECK B</span>
+        </div>
+        <input type="range" id="xfader" min="0" max="1" step="0.01" value="0.5" oninput="crossfade(this.value)" class="w-full h-3 bg-black/60 rounded-lg cursor-pointer">
+        <div class="text-center text-[10px] text-gray-500 mt-3 font-mono">Mistura contínua A/B com compensação de ganho</div>
+      </div>
+
+      <!-- Painel de Efeitos (FX Rack) -->
+      <div class="glass-panel p-5 rounded-3xl flex flex-col justify-between shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-orbitron font-bold text-sm text-purple-400 flex items-center space-x-2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>DSP EFFECT RACK</span>
+          </h3>
+          <select id="fxDeck" class="bg-black/60 border border-white/10 text-xs text-purple-300 rounded-lg px-2 py-1 font-orbitron focus:outline-none">
+            <option value="A">Deck A</option>
+            <option value="B">Deck B</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="sweepFilter(getFXDeck())" class="py-2.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-orbitron flex flex-col items-center justify-center transition-all">
+            <i class="fa-solid fa-water mb-1 text-sm"></i><span>SWEEP</span>
+          </button>
+          <button onclick="addReverb(getFXDeck())" class="py-2.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-orbitron flex flex-col items-center justify-center transition-all">
+            <i class="fa-solid fa-cloud mb-1 text-sm"></i><span>REVERB</span>
+          </button>
+          <button onclick="addDelay(getFXDeck())" class="py-2.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-orbitron flex flex-col items-center justify-center transition-all">
+            <i class="fa-solid fa-stopwatch mb-1 text-sm"></i><span>DELAY</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Gravador de Sessão Estúdio -->
+      <div class="glass-panel p-5 rounded-3xl flex flex-col justify-between shadow-xl">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-orbitron font-bold text-sm text-pink-400 flex items-center space-x-2">
+            <i class="fa-solid fa-microphone"></i>
+            <span>RECORDER MASTER</span>
+          </h3>
+          <span id="recTimer" class="text-xs font-mono text-pink-400 font-bold">00:00</span>
+        </div>
+
+        <div class="flex space-x-2">
+          <button onclick="startRecording()" class="flex-1 py-2.5 bg-pink-600 hover:bg-pink-500 text-white font-orbitron font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition-all shadow-lg shadow-pink-600/20">
+            <i class="fa-solid fa-circle text-[10px] animate-pulse"></i><span>GRAVAR</span>
+          </button>
+          <button onclick="stopRecording()" class="flex-1 py-2.5 bg-white/10 hover:bg-white/20 text-white font-orbitron font-bold rounded-xl text-xs flex items-center justify-center transition-all">
+            <i class="fa-solid fa-stop"></i><span>PARAR</span>
+          </button>
+        </div>
+
+        <div class="mt-2 text-center">
+          <a id="downloadLink" class="text-xs text-cyan-400 hover:underline font-mono hidden">⬇️ Baixar Mixagem WebM</a>
+        </div>
+      </div>
+
     </div>
+
+    <!-- Rodapé -->
+    <footer class="mt-auto text-center text-xs text-gray-500 py-4 border-t border-white/5">
+      Sonic Fusion DJ Mixer Pro • Desenvolvido com Web Audio API & WaveSurfer.js
+    </footer>
   </div>
 
-  <div class="deck crossfader">
-    <h2>🎚️ Crossfader</h2>
-    <input type="range" id="xfader" min="0" max="1" step="0.01" value="0.5" onchange="crossfade(this.value)">
-    <label>Curva:</label>
-    <select id="curve" onchange="crossfade(document.getElementById('xfader').value)">
-      <option value="linear">Linear</option>
-      <option value="exponential">Exponencial</option>
-      <option value="log">Logarítmica</option>
-      <option value="s">Curva em S</option>
-    </select>
-  </div>
 
-  <div class="deck">
-    <h2>🎧 Painel de Efeitos</h2>
-    <label>Deck:</label>
-    <select id="fxDeck">
-      <option value="A">Deck A</option>
-      <option value="B">Deck B</option>
-    </select>
-    <button onclick="sweepFilter(getFXDeck())">🌊 Sweep</button>
-    <button onclick="addReverb(getFXDeck())">🌫️ Reverb</button>
-    <button onclick="addDelay(getFXDeck())">⏱️ Delay</button>
-  </div>
-
-  <div class="deck">
-    <h2>🎙️ Gravação da Mixagem</h2>
-    <button onclick="startRecording()">🔴 Gravar</button>
-    <button onclick="stopRecording()">⏹️ Parar</button>
-    <a id="downloadLink"></a>
-  </div>
-
+  <!-- ================= SCRIPTS DE LÓGICA & ÁUDIO ================= -->
   <script>
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const wavesurferA = WaveSurfer.create({ container: '#waveA', waveColor: '#0f0', progressColor: '#0ff', height: 80 });
-    const wavesurferB = WaveSurfer.create({ container: '#waveB', waveColor: '#f00', progressColor: '#ff0', height: 80 });
-
+    let audioCtx = null;
     const deckNodes = { A: {}, B: {} };
     const eqNodes = { A: {}, B: {} };
+    let cuePoints = { A: 0, B: 0 };
+    let loopState = { A: false, B: false };
+    let loopIntervals = { A: null, B: null };
+    
+    // Instanciação do WaveSurfer.js
+    let wavesurferA, wavesurferB;
 
-    function initDeck(deck, wavesurfer) {
+    document.addEventListener('DOMContentLoaded', () => {
+      wavesurferA = WaveSurfer.create({
+        container: '#waveA',
+        waveColor: '#0891b2',
+        progressColor: '#22d3ee',
+        cursorColor: '#ffffff',
+        height: 70,
+        barWidth: 2,
+        barRadius: 2,
+        url: ''
+      });
+
+      wavesurferB = WaveSurfer.create({
+        container: '#waveB',
+        waveColor: '#db2777',
+        progressColor: '#f472b6',
+        cursorColor: '#ffffff',
+        height: 70,
+        barWidth: 2,
+        barRadius: 2,
+        url: ''
+      });
+    });
+
+    // Função de transição da Capa para o App
+    function handleCoverAction(action) {
+      initAudioContext();
+      
+      // Transição visual de telas
+      const cover = document.getElementById('coverScreen');
+      const app = document.getElementById('appScreen');
+      
+      cover.style.opacity = '0';
+      cover.style.transform = 'scale(1.05)';
+      setTimeout(() => {
+        cover.classList.add('screen-hidden');
+        app.classList.remove('screen-hidden');
+        app.style.opacity = '1';
+      }, 400);
+
+      // Ações específicas acionadas pelos botões da capa
+      if (action === 'preview') {
+        setTimeout(() => alertBox("Modo Pré-escuta ativo! Conecte seus fones para monitoramento independente."), 500);
+      } else if (action === 'record') {
+        setTimeout(() => startRecording(), 600);
+      }
+    }
+
+    function backToCover() {
+      const cover = document.getElementById('coverScreen');
+      const app = document.getElementById('appScreen');
+      
+      cover.classList.remove('screen-hidden');
+      cover.style.opacity = '1';
+      cover.style.transform = 'scale(1)';
+      app.classList.add('screen-hidden');
+    }
+
+    function alertBox(msg) {
+      // Mensagem customizada sem usar alert nativo bloqueante
+      console.log("[Sonic Fusion Notice]:", msg);
+    }
+
+    // Inicialização do contexto WebAudio
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        initDeckAudio("A", wavesurferA, "timeA", "stateA");
+        initDeckAudio("B", wavesurferB, "timeB", "stateB");
+      } else if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      document.getElementById('masterIndicator').classList.remove('bg-red-500/50');
+      document.getElementById('masterIndicator').classList.add('bg-emerald-500', 'animate-pulse');
+      document.getElementById('masterStatusText').textContent = 'MASTER ONLINE';
+    }
+
+    function initDeckAudio(deck, wavesurfer, timeId, stateId) {
       deckNodes[deck].gain = audioCtx.createGain();
       deckNodes[deck].analyser = audioCtx.createAnalyser();
       deckNodes[deck].analyser.fftSize = 256;
 
+      // Equalizador de 3 bandas (Biquad Filters)
       eqNodes[deck].low = audioCtx.createBiquadFilter();
       eqNodes[deck].low.type = "lowshelf";
-      eqNodes[deck].low.frequency.value = 200;
+      eqNodes[deck].low.frequency.value = 250;
 
       eqNodes[deck].mid = audioCtx.createBiquadFilter();
       eqNodes[deck].mid.type = "peaking";
-      eqNodes[deck].mid.frequency.value = 1000;
+      eqNodes[deck].mid.frequency.value = 1500;
 
       eqNodes[deck].high = audioCtx.createBiquadFilter();
       eqNodes[deck].high.type = "highshelf";
-      eqNodes[deck].high.frequency.value = 5000;
+      eqNodes[deck].high.frequency.value = 4000;
 
       wavesurfer.on('ready', () => {
-        const src = audioCtx.createMediaElementSource(wavesurfer.media);
-        src.connect(eqNodes[deck].low);
-        eqNodes[deck].low.connect(eqNodes[deck].mid);
-        eqNodes[deck].mid.connect(eqNodes[deck].high);
-        eqNodes[deck].high.connect(deckNodes[deck].gain);
-        deckNodes[deck].gain.connect(deckNodes[deck].analyser);
-        deckNodes[deck].analyser.connect(audioCtx.destination);
+        const mediaEl = wavesurfer.getMediaElement();
+        if (mediaEl && !deckNodes[deck].sourceConnected) {
+          try {
+            const src = audioCtx.createMediaElementSource(mediaEl);
+            src.connect(eqNodes[deck].low);
+            eqNodes[deck].low.connect(eqNodes[deck].mid);
+            eqNodes[deck].mid.connect(eqNodes[deck].high);
+            eqNodes[deck].high.connect(deckNodes[deck].gain);
+            deckNodes[deck].gain.connect(deckNodes[deck].analyser);
+            deckNodes[deck].analyser.connect(audioCtx.destination);
+            deckNodes[deck].sourceConnected = true;
+          } catch(e) {
+            console.log("Media source já conectado", e);
+          }
+        }
       });
+
+      wavesurfer.on('audioprocess', () => updateDeckTime(wavesurfer, timeId));
+      wavesurfer.on('seeking', () => updateDeckTime(wavesurfer, timeId));
+      wavesurfer.on('play', () => document.getElementById(stateId).textContent = "PLAYING");
+      wavesurfer.on('pause', () => document.getElementById(stateId).textContent = "PAUSED");
 
       drawSpectrum(deckNodes[deck].analyser, "spectrum" + deck);
     }
 
-    initDeck("A", wavesurferA);
-    initDeck("B", wavesurferB);
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateDeckTime(ws, timeId) {
+      const current = ws.getCurrentTime() || 0;
+      const duration = ws.getDuration() || 0;
+      document.getElementById(timeId).textContent = `${formatTime(current)} / ${formatTime(duration)}`;
+    }
 
     function loadTrack(input, deck) {
+      initAudioContext();
       const file = input.files[0];
       if (file) {
         const url = URL.createObjectURL(file);
-        if (deck === "A") wavesurferA.load(url);
+        const nameEl = document.getElementById(deck === 'A' ? 'trackNameA' : 'trackNameB');
+        nameEl.textContent = file.name;
+        
+        if (deck === 'A') wavesurferA.load(url);
         else wavesurferB.load(url);
       }
     }
-    function play(deck) { (deck==="A"?wavesurferA:wavesurferB).play(); }
-    function pause(deck) { (deck==="A"?wavesurferA:wavesurferB).pause(); }
-    let cuePoints = {A:0,B:0};
-    function setCue(deck){ cuePoints[deck] = (deck==="A"?wavesurferA:wavesurferB).getCurrentTime(); }
-    function goToCue(deck){ (deck==="A"?wavesurferA:wavesurferB).setTime(cuePoints[deck]); }
-    function startLoop(deck){ let ws=(deck==="A"?wavesurferA:wavesurferB); ws.setLoopStart(ws.getCurrentTime()); ws.setLoopEnd(ws.getCurrentTime()+4); ws.playLoop(); }
-    function stopLoop(deck){ (deck==="A"?wavesurferA:wavesurferB).playPause(); }
 
-    function setVolume(value, deck){ deckNodes[deck].gain.gain.value=value; }
-    function setPitch(value, deck){ (deck==="A"?wavesurferA:wavesurferB).setPlaybackRate(value); }
-    function setEQ(deck, band, value){ eqNodes[deck][band].gain.value = value; }
-
-    function crossfade(value){
-      const curve = document.getElementById("curve").value;
-      let gA,gB;
-      if(curve==="linear"){ gA=1-value; gB=value; }
-      else if(curve==="exponential"){ gA=Math.pow(1-value,2); gB=Math.pow(value,2); }
-      else if(curve==="log"){ gA=Math.log10((1-value)*9+1); gB=Math.log10(value*9+1); }
-      else{ gA=1/(1+Math.exp((value-0.5)*10)); gB=1-gA; }
-      deckNodes.A.gain.gain.setTargetAtTime(gA,audioCtx.currentTime,0.01);
-      deckNodes.B.gain.gain.setTargetAtTime(gB,audioCtx.currentTime,0.01);
+    function play(deck) {
+      initAudioContext();
+      const ws = deck === 'A' ? wavesurferA : wavesurferB;
+      ws.play();
     }
 
-    function drawSpectrum(analyser, canvasId){
-      const canvas=document.getElementById(canvasId);
-      const ctx=canvas.getContext("2d");
-      const bufferLength=analyser.frequencyBinCount;
-      const dataArray=new Uint8Array(bufferLength);
-      function render(){
+    function pause(deck) {
+      const ws = deck === 'A' ? wavesurferA : wavesurferB;
+      ws.pause();
+    }
+
+    function setCue(deck) {
+      const ws = deck === 'A' ? wavesurferA : wavesurferB;
+      cuePoints[deck] = ws.getCurrentTime();
+    }
+
+    function goToCue(deck) {
+      const ws = deck === 'A' ? wavesurferA : wavesurferB;
+      ws.setTime(cuePoints[deck]);
+    }
+
+    function toggleLoop(deck) {
+      const ws = deck === 'A' ? wavesurferA : wavesurferB;
+      const btn = document.getElementById('loopBtn' + deck);
+      
+      loopState[deck] = !loopState[deck];
+      if (loopState[deck]) {
+        btn.classList.add('bg-purple-500', 'text-black');
+        const start = ws.getCurrentTime();
+        const end = start + 4; // Loop de 4 segundos
+        loopIntervals[deck] = setInterval(() => {
+          if (ws.getCurrentTime() >= end || ws.getCurrentTime() < start) {
+            ws.setTime(start);
+          }
+        }, 100);
+      } else {
+        btn.classList.remove('bg-purple-500', 'text-black');
+        clearInterval(loopIntervals[deck]);
+      }
+    }
+
+    function setVolume(val, deck) {
+      if (deckNodes[deck].gain) {
+        deckNodes[deck].gain.gain.value = parseFloat(val);
+      }
+    }
+
+    function setPitch(val, deck) {
+      const ws = deck === 'A' ? wavesurferA : wavesurferB;
+      ws.setPlaybackRate(parseFloat(val));
+    }
+
+    function setEQ(deck, band, val) {
+      if (eqNodes[deck][band]) {
+        eqNodes[deck][band].gain.value = parseFloat(val);
+      }
+    }
+
+    // Crossfader Avançado com Curvas de Mistura
+    function crossfade(val) {
+      if (!audioCtx) return;
+      const curveType = document.getElementById('curve').value;
+      let v = parseFloat(val);
+      let gA, gB;
+
+      if (curveType === 'linear') {
+        gA = 1 - v;
+        gB = v;
+      } else if (curveType === 'exponential') {
+        gA = Math.pow(1 - v, 2);
+        gB = Math.pow(v, 2);
+      } else if (curveType === 'log') {
+        gA = Math.log10((1 - v) * 9 + 1);
+        gB = Math.log10(v * 9 + 1);
+      } else { // Curva em S
+        gA = 1 / (1 + Math.exp((v - 0.5) * 10));
+        gB = 1 - gA;
+      }
+
+      if (deckNodes.A.gain) deckNodes.A.gain.gain.setTargetAtTime(gA, audioCtx.currentTime, 0.01);
+      if (deckNodes.B.gain) deckNodes.B.gain.gain.setTargetAtTime(gB, audioCtx.currentTime, 0.01);
+    }
+
+    // Visualizador de Espectro em Tempo Real (Canvas)
+    function drawSpectrum(analyser, canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function render() {
         requestAnimationFrame(render);
+        if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+          canvas.width = canvas.clientWidth;
+          canvas.height = canvas.clientHeight;
+        }
+
         analyser.getByteFrequencyData(dataArray);
-        ctx.fillStyle="#111"; ctx.fillRect(0,0,canvas.width,canvas.height);
-        const barWidth=canvas.width/bufferLength;
-        dataArray.forEach((v,i)=>{ let h=(v/255)*canvas.height; ctx.fillStyle="#0ff"; ctx.fillRect(i*barWidth,canvas.height-h,barWidth,h); });
+        ctx.fillStyle = '#05050a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = (canvas.width / bufferLength) * 2.5;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          let barHeight = (dataArray[i] / 255) * canvas.height;
+          ctx.fillStyle = `rgb(${dataArray[i]}, 120, 255)`;
+          ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+          x += barWidth + 1;
+        }
       }
       render();
     }
 
-    function getFXDeck(){ return document.getElementById("fxDeck").value; }
-    function sweepFilter(deck){ eqNodes[deck].mid.frequency.linearRampToValueAtTime(5000,audioCtx.currentTime+2); }
-    function addReverb(deck){ let convolver=audioCtx.createConvolver(); deckNodes[deck].gain.connect(convolver); convolver.connect(audioCtx.destination); }
-    function addDelay(deck){ let delay=audioCtx.createDelay(5.0); delay.delayTime.value=0.5; deckNodes[deck].gain.connect(delay); delay.connect(audioCtx.destination); }
-
-    let mediaRecorder,chunks=[];
-    function startRecording(){
-      const dest=audioCtx.createMediaStreamDestination();
-      deckNodes.A.gain.connect(dest);
-      deckNodes.B.gain.connect(dest);
-      mediaRecorder=new MediaRecorder(dest.stream);
-      mediaRecorder.ondataavailable=e=>chunks.push(e.data);
-      mediaRecorder.onstop=()=>{
-        const blob=new Blob(chunks,{type:'audio/webm'});
-        const url=URL.createObjectURL(blob);
-        const link=document.getElementById("downloadLink");
-        link.href=url; link.download="mixagem.webm"; link.style.display="block"; link.textContent="⬇️ Baixar Mixagem";
-      };
-      mediaRecorder.start();
+    // Efeitos DSP
+    function sweepFilter(deck) {
+      if (!audioCtx) return;
+      eqNodes[deck].mid.frequency.linearRampToValueAtTime(8000, audioCtx.currentTime + 1.5);
     }
-    function stopRecording(){ mediaRecorder.stop(); }
+
+    function addReverb(deck) {
+      if (!audioCtx) return;
+      let convolver = audioCtx.createConvolver();
+      deckNodes[deck].gain.connect(convolver);
+      convolver.connect(audioCtx.destination);
+    }
+
+    function addDelay(deck) {
+      if (!audioCtx) return;
+      let delay = audioCtx.createDelay(5.0);
+      delay.delayTime.value = 0.35;
+      deckNodes[deck].gain.connect(delay);
+      delay.connect(audioCtx.destination);
+    }
+
+    // Gravador de Áudio Funcional Integrado
+    let mediaRecorder;
+    let audioChunks = [];
+    let recTimerInterval;
+    let recSeconds = 0;
+
+    function startRecording() {
+      initAudioContext();
+      const dest = audioCtx.createMediaStreamDestination();
+      if (deckNodes.A.gain) deckNodes.A.gain.connect(dest);
+      if (deckNodes.B.gain) deckNodes.B.gain.connect(dest);
+
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(dest.stream);
+      
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        const link = document.getElementById('downloadLink');
+        link.href = url;
+        link.download = "SonicFusion_Mix.webm";
+        link.classList.remove('hidden');
+        link.textContent = "⬇️ Baixar Mixagem Pronta (.webm)";
+      };
+
+      mediaRecorder.start();
+      document.getElementById('recMasterBtn').classList.add('bg-pink-500/40', 'border-pink-400');
+      
+      recSeconds = 0;
+      recTimerInterval = setInterval(() => {
+        recSeconds++;
+        const m = Math.floor(recSeconds / 60).toString().padStart(2, '0');
+        const s = (recSeconds % 60).toString().padStart(2, '0');
+        document.getElementById('recTimer').textContent = `${m}:${s}`;
+      }, 1000);
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        clearInterval(recTimerInterval);
+        document.getElementById('recMasterBtn').classList.remove('bg-pink-500/40', 'border-pink-400');
+      }
+    }
+
+    function toggleGlobalRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
   </script>
 </body>
 </html>
+```
